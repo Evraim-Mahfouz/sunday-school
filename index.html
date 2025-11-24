@@ -1,165 +1,173 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quiz شخصيات مسيحية أرثوذكسية</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>لعبة الكويز — عرف الشخصية</title>
 <style>
-body { background: #071024; color: white; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-.card { background: rgba(255,255,255,0.07); padding: 20px; border-radius: 15px; max-width: 500px; width: 100%; text-align: center; }
-button { padding: 12px; margin-top: 8px; width: 100%; border: none; border-radius: 10px; background: #3b82f6; color: white; cursor: pointer; }
-#options button { background: rgba(255,255,255,0.15); margin-bottom: 8px; }
-#feedback { margin-top: 12px; min-height: 24px; font-weight: bold; }
-#nextBtn { margin-top: 12px; background: #6b7280; }
-img { max-width: 100%; border-radius: 12px; margin-top: 12px; filter: blur(0px); transition: filter 0.5s; display: none; }
-input { width: 100%; padding: 10px; border-radius: 10px; border: none; margin-top: 12px; }
-.hidden { display: none; }
+:root {
+  --bg1:#0a0f2c;
+  --bg2:#1b2347;
+  --accent1:#3b82f6;
+  --accent2:#2563eb;
+  --joker:#a855f7;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Cairo, system-ui, Arial;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg1),var(--bg2));color:#fff;padding:10px}
+.container{width:100%;max-width:420px}
+.card{background:hsla(220,20%,15%,0.35);backdrop-filter:blur(8px);border-radius:16px;padding:18px;box-shadow:0 8px 30px rgba(2,6,23,.6)}
+h1,h2{margin:.25rem 0;text-align:center}
+.row{display:flex;flex-direction:column;gap:12px;justify-content:center;margin-top:8px;align-items:center;}
+.btn{width:90%;padding:14px 20px;border-radius:14px;border:0;background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;font-weight:700;cursor:pointer;transition:transform .18s,box-shadow .18s,background .3s}
+.btn:active{transform:translateY(1px);box-shadow:0 4px 10px rgba(0,0,0,.3)}
+.btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+#quizArea .opts{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+.opt{background:rgba(255,255,255,0.15);padding:16px;border-radius:14px;border:1px solid rgba(255,255,255,0.2);cursor:pointer;transition:transform .2s,background .2s,color .2s,box-shadow .2s; font-weight:600;color:#f0f0f0}
+.opt:hover{transform:scale(1.05);box-shadow:0 4px 15px rgba(0,0,0,.25);background:rgba(255,255,255,0.25);color:#fff}
+.opt:active{background:var(--accent2);color:#fff}
+.opt:disabled{opacity:.6;cursor:not-allowed}
+#timer{font-size:20px;color:#facc15;font-weight:700;text-align:center;margin-top:8px}
+#feedback{min-height:28px;margin-top:10px;font-weight:700;text-align:center}
+#jokerBtn{background:linear-gradient(135deg,var(--joker),#7c3aed);transition:transform .2s,opacity .3s}
+#jokerBtn.used{opacity:0.5;pointer-events:none;}
+#jokerBtn:active{transform:scale(0.95);box-shadow:0 4px 15px rgba(0,0,0,.3)}
+#nextBtn{width:90%}
+.hidden{display:none}
+img#finalImg{width:100%;border-radius:12px;margin-top:12px;display:none;filter:blur(40px);transition:filter .6s,transform .45s,opacity .45s}
+img#finalImg.show{display:block;transform:scale(1);opacity:1}
+.score{font-weight:800;color:#9ae6b4;text-align:center}
+.footer-note{font-size:13px;color:#94a3b8;margin-top:8px;text-align:center}
+input#guessInput{width:95%;padding:12px 14px;border-radius:12px;border:none;margin-top:8px;font-size:16px;}
+@media (max-width:360px){.btn{width:100%}#jokerBtn,#nextBtn{width:100%}}
 </style>
 </head>
 <body>
+<div class="container">
+  <div class="card">
+    <h1>لعبة الكويز — عرف الشخصية</h1>
 
-<div class="card" id="teamSelect">
-<h2>اختر الشخصية</h2>
-<button onclick="selectTeam(1)">الشخصية 1</button>
-<button onclick="selectTeam(2)">الشخصية 2</button>
-<button onclick="selectTeam(3)">الشخصية 3</button>
+    <div id="teamSelect">
+      <h2>اختر الفريق</h2>
+      <div class="row">
+        <button class="btn" onclick="startTeam('team1')">فريق 1</button>
+        <button class="btn" onclick="startTeam('team2')">فريق 2</button>
+        <button class="btn" onclick="startTeam('team3')">فريق 3</button>
+      </div>
+      <p class="footer-note">كل فريق سيجيب على 10 أسئلة. يوجد 60 ثانية لكل سؤال. يمكنك استخدام Joker مرة واحدة لسؤال واحد فقط لرفع نقاطه إلى 20.</p>
+    </div>
+
+    <div id="quizArea" class="hidden">
+      <div id="timer">الوقت: 60s</div>
+      <h2 id="questionText" style="margin-top:8px"></h2>
+      <div id="answers" class="opts" aria-live="polite"></div>
+      <div id="feedback" aria-live="polite"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;align-items:center;">
+        <button id="jokerBtn" class="btn" onclick="useJoker()">Joker (+20)</button>
+        <button id="nextBtn" class="btn secondary hidden" onclick="nextQuestion()">التالي</button>
+      </div>
+      <div id="scoreBox" style="margin-top:12px">النقاط: <span id="scoreValue" class="score">0</span></div>
+    </div>
+
+    <div id="questionResult" class="hidden">
+      <h2 id="questionResultText"></h2>
+      <button class="btn" onclick="continueQuiz()">التالي</button>
+    </div>
+
+    <div id="resultArea" class="hidden">
+      <h2>انتهى الكويز — خمن الشخصية</h2>
+      <img id="finalImg" alt="صورة الشخصية" />
+      <p style="margin-top:10px">نقاط الفريق: <span id="finalScore" class="score">0</span></p>
+      <input id="guessInput" placeholder="اكتب اسم الشخصية" />
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;align-items:center;">
+        <button class="btn" onclick="checkName()">تأكيد التخمين</button>
+        <button class="btn secondary" onclick="restart()">إعادة من البداية</button>
+      </div>
+      <p id="guessResult" class="footer-note" style="font-weight:800;margin-top:10px"></p>
+    </div>
+  </div>
 </div>
-
-<div class="card hidden" id="quizBox">
-<h2 id="questionText"></h2>
-<div id="options"></div>
-<div id="feedback"></div>
-<button id="nextBtn" class="hidden" onclick="nextQuestion()">التالي</button>
-</div>
-
-<div class="card hidden" id="resultBox">
-<h2>نتيجتك: <span id="scorePercent"></span>%</h2>
-<img id="resultImage" src="" alt="صورة الشخصية" />
-<input id="guessName" placeholder="مين الشخصية دي؟" type="text" />
-<button onclick="checkName()">تأكيد</button>
-<p id="nameResult"></p>
-<button onclick="restart()">إعادة من البداية</button>
-</div>
-
 <script>
-const data = {
-1: { questions: [
-{ q: "أمره الله ببناء شيء كبير لحماية الكائنات الحية، ما هو؟", options: ["سفينة", "جسر", "قلعة"], answer: "سفينة" },
-{ q: "حدث كبير غطى الأرض بالكامل لفترة طويلة، ما هو؟", options: ["طوفان", "زلزال", "حريق"], answer: "طوفان" },
-{ q: "كان يأخذ من كل نوع كائن حي زوجًا ليبقى على قيد الحياة، من هو؟", options: ["الشخصية", "ملك", "نبي"], answer: "الشخصية" },
-{ q: "أعطاه الله علامة على وعد بعد الحدث الكبير، ما هي؟", options: ["قوس قزح", "شجرة", "نجم"], answer: "قوس قزح" },
-{ q: "له ثلاثة أولاد مهمين في الرواية، من هم؟", options: ["سيم، حام، يافث", "موسى، هارون، يوسف", "داود، سليمان، صموئيل"], answer: "سيم، حام، يافث" },
-{ q: "اعتبره الأرثوذكس مثالًا للإيمان والثقة بالله، لماذا؟", options: ["الإيمان", "القوة", "الحرب"], answer: "الإيمان" },
-{ q: "بقيت المياه مرتفعة لفترة محددة، كم؟", options: ["40 يومًا", "7 أيام", "100 يوم"], answer: "40 يومًا" },
-{ q: "استمر في عمله بإيمان رغم الظروف الصعبة، ما الدرس هنا؟", options: ["الثقة بالله", "القوة", "الحرب"], answer: "الثقة بالله" },
-{ q: "رأى الأرثوذكس أن هذا الحدث يوضح عقاب الله للشر، ما الحدث؟", options: ["الطوفان", "الحرب", "الزلزال"], answer: "الطوفان" },
-{ q: "كان شخصية رئيسية في حفظ البشرية بعد الكارثة، من يكون؟", options: ["الشخصية", "ملك", "نبي"], answer: "الشخصية" }
-], image: "نوح.gif", realName: "نوح" },
-2: { questions: [
-{ q: "كان ينادي الناس بالتوبة والغفران، من هو؟", options: ["الشخصية", "ملك", "نبي"], answer: "الشخصية" },
-{ q: "عمد شخصية مهمة في نهر مشهور، ما هو النهر؟", options: ["نهر الأردن", "نهر النيل", "بحر الجليل"], answer: "نهر الأردن" },
-{ q: "كان يرتدي ثيابًا غير عادية مصنوعة من مادة معينة، ما هي؟", options: ["جلد الإبل", "حرير", "صوف"], answer: "جلد الإبل" },
-{ q: "السبب الرئيسي لندائه كان تحضير الناس لحدث كبير، ما الحدث؟", options: ["مجيء المسيح", "حرب", "ميلاد الملك"], answer: "مجيء المسيح" },
-{ q: "له أب مشهور في الإنجيل، من هو؟", options: ["زكريا", "يوسف", "يعقوب"], answer: "زكريا" },
-{ q: "دوره الأساسي كان إعلان مجيء شخص مهم، من هو؟", options: ["الشخصية", "ملك", "نبي"], answer: "الشخصية" },
-{ q: "انتهت حياته بأمر من شخص حكومي، من هو؟", options: ["هيرودس", "قيصر", "نيرون"], answer: "هيرودس" },
-{ q: "يمثل في الأرثوذكسية الصوت الذي يعلن عن المخلص، كيف يصفونه؟", options: ["الصوت في البرية", "الملك", "المعلم"], answer: "الصوت في البرية" },
-{ q: "كان رمزًا للتوبة في حياته، ما الدرس الروحي؟", options: ["التوبة", "الحرب", "الإيمان"], answer: "التوبة" },
-{ q: "استُخدمت حياته كمثال على التضحية والإخلاص، لماذا؟", options: ["الإخلاص", "الثروة", "الحكم"], answer: "الإخلاص" }
-], image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/John_the_Baptist_Icon.jpg/480px-John_the_Baptist_Icon.jpg", realName: "يوحنا المعمدان" },
-3: { questions: [
-{ q: "كان معروفًا بإيمانه العميق بالله، من هو؟", options: ["الشخصية", "ملك", "نبي"], answer: "الشخصية" },
-{ q: "اختُبر بأمر صعب يتعلق بابنه، ما هو الاختبار؟", options: ["التضحية", "الحرب", "رحلة"], answer: "التضحية" },
-{ q: "رزقه الله بولد واحد من زوجته سارة، كم عدد الأبناء؟", options: ["1", "2", "3"], answer: "1" },
-{ q: "استضاف ضيوفًا غير متوقعين من السماء، ما هو الحدث؟", options: ["لقاء الملائكة", "حرب", "سفر"], answer: "لقاء الملائكة" },
-{ q: "يعقد الأرثوذكس العهد من خلاله، ما معنى هذا العهد؟", options: ["مباركة أبدية", "سلطة ملكية", "معجزة"], answer: "مباركة أبدية" },
-{ q: "لقب بـ“أب الإيمان”، لماذا؟", options: ["لإيمانه الكبير", "لقوته", "لثروته"], answer: "لإيمانه الكبير" },
-{ q: "فرح عندما بشره الله بالذرية، ما الدرس؟", options: ["الإيمان والطاعة", "الحرب", "الثروة"], answer: "الإيمان والطاعة" },
-{ q: "يظهر في الأيقونات وهو يرحب بالملائكة، ما هو المشهد؟", options: ["مائدة مع الملائكة", "سيف", "هيكل"], answer: "مائدة مع الملائكة" },
-{ q: "علمنا الأرثوذكسية الإيمان والطاعة من حياته، كيف؟", options: ["الصلاة والثقة", "القوة", "السيطرة"], answer: "الصلاة والثقة" },
-{ q: "ضيافته كانت علامة على لقاء الملائكة، ما أهمية هذا؟", options: ["الملائكة", "الحرب", "الثراء"], answer: "الملائكة" }
-], image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Trinity_icon_by_Andrei_Rublev.jpg/480px-Trinity_icon_by_Andrei_Rublev.jpg", realName: "إبراهيم" }
+let currentTeam='', currentQuestionIndex=0, score=0, timerInterval, jokerUsed=false;
+
+const questionsData = {
+  team1: [
+    {q:'من هو نبي الطوفان؟', options:['نوح','إبراهيم','موسى','داود'], answer:'نوح'},
+    {q:'ما اسم السفينة التي بناها نوح؟', options:['الفلك','الطوفان','السفينة الكبيرة','النجاة'], answer:'الفلك'},
+    {q:'كم كان عمر نوح عند الطوفان؟', options:['600','500','950','1200'], answer:'600'},
+    {q:'ما الذي طلبه الله من نوح أن يفعله قبل الطوفان؟', options:['الصلاة','بناء الفلك','الصوم','الهجرة'], answer:'بناء الفلك'},
+    {q:'كم من الحيوان أخذ نوح على الفلك؟', options:['زوج واحد','زوجين','ثلاثة أزواج','أربعة أزواج'], answer:'زوجين'},
+    {q:'ما علامة نهاية الطوفان؟', options:['قوس قزح','الشمس','القمر','النجوم'], answer:'قوس قزح'},
+    {q:'من ساعد نوح في بناء السفينة؟', options:['أبناؤه','جميع الناس','لا أحد','الملائكة'], answer:'أبناؤه'},
+    {q:'كم يوم استمر الطوفان؟', options:['40 يوم','50 يوم','100 يوم','120 يوم'], answer:'40 يوم'},
+    {q:'أين استقر الفلك بعد الطوفان؟', options:['جبل أرارات','الأهرامات','القدس','مكة'], answer:'جبل أرارات'},
+    {q:'ما درسنا من قصة نوح؟', options:['الصبر والإيمان','الغضب','الكسل','الخيانة'], answer:'الصبر والإيمان'}
+  ],
+  team2: [
+    {q:'من هو يوحنا المعمدان؟', options:['نبي','ملك','حاكم','فيلسوف'], answer:'نبي'},
+    {q:'ما رسالته الأساسية؟', options:['التوبة','الصلاة','الحرب','الزكاة'], answer:'التوبة'},
+    {q:'أين عمد يوحنا الناس؟', options:['نهر الأردن','البحر الأحمر','الفرات','النيل'], answer:'نهر الأردن'},
+    {q:'ما الهدف من المعمودية؟', options:['الغفران','التوبة','الزكاة','الصوم'], answer:'التوبة'},
+    {q:'كم من الوقت عاش يوحنا؟', options:['70 سنة','80 سنة','90 سنة','60 سنة'], answer:'70 سنة'},
+    {q:'من هم أقرباؤه؟', options:['يسوع المسيح','موسى','إبراهيم','نوح'], answer:'يسوع المسيح'},
+    {q:'ماذا لبس يوحنا؟', options:['جلد حيوان','كتان','صوف','حرير'], answer:'جلد حيوان'},
+    {q:'ما طعام يوحنا؟', options:['جراد وعسل','خبز','لحم','فاكهة'], answer:'جراد وعسل'},
+    {q:'أين ألقى خطبه؟', options:['البرية','القدس','مكة','المدينة'], answer:'البرية'},
+    {q:'لماذا سُمي المعمدان؟', options:['لأنه عمد الناس','لأنه ملك','لأنه نبي','لأنه حاكم'], answer:'لأنه عمد الناس'}
+  ],
+  team3: [
+    {q:'من هو إبراهيم؟', options:['نبي','ملك','ملك حرب','فيلسوف'], answer:'نبي'},
+    {q:'أين ولد إبراهيم؟', options:['أور الكلدانيين','مكة','القدس','بابل'], answer:'أور الكلدانيين'},
+    {q:'من زوجته؟', options:['سارة','مريم','هاجر','رفقة'], answer:'سارة'},
+    {q:'كم كان عمره عند الولادة إسحاق؟', options:['100','80','120','60'], answer:'100'},
+    {q:'ما اختبار الله لإبراهيم؟', options:['ذبح إسحاق','بناء الكعبة','الصوم','الهجرة'], answer:'ذبح إسحاق'},
+    {q:'ما وعد الله لإبراهيم؟', options:['أمة كبيرة','ملك','مدينة','سفينة'], answer:'أمة كبيرة'},
+    {q:'من كان أعظم أصدقائه؟', options:['ملائكة','نوح','موسى','داود'], answer:'ملائكة'},
+    {q:'ما الدرس من قصة إبراهيم؟', options:['الإيمان والثقة بالله','الغضب','الكسل','الخيانة'], answer:'الإيمان والثقة بالله'},
+    {q:'أين استقر إبراهيم بعد الهجرة؟', options:['كنعان','مكة','القدس','بابل'], answer:'كنعان'},
+    {q:'ماذا علم إبراهيم الناس؟', options:['عبادة الله وحده','عبادة الأصنام','الحرب','الثروة'], answer:'عبادة الله وحده'}
+  ]
 };
 
-let currentTeam = null;
-let step = 0;
-let score = 0;
-let teamInfo = null;
+const finalImages={
+  team1:'نوح.gif',
+  team2:'يوحنا.jpg',
+  team3:'ابراهيم.jpg'
+};
 
-function selectTeam(team) {
-  currentTeam = team;
-  teamInfo = data[team];
-  step = 0;
-  score = 0;
-  document.getElementById("teamSelect").classList.add("hidden");
-  document.getElementById("resultBox").classList.add("hidden");
-  document.getElementById("quizBox").classList.remove("hidden");
-  loadQuestion();
+function startTeam(team){ currentTeam=team; currentQuestionIndex=0; score=0; jokerUsed=false; document.getElementById('teamSelect').classList.add('hidden'); document.getElementById('quizArea').classList.remove('hidden'); document.getElementById('jokerBtn').disabled=false; document.getElementById('jokerBtn').classList.remove('hidden'); document.getElementById('jokerBtn').classList.remove('used'); showQuestion(); }
+
+function showQuestion(){
+  if(!questionsData[currentTeam] || questionsData[currentTeam].length===0){ alert('لا توجد أسئلة لهذا الفريق'); return; }
+  const q=questionsData[currentTeam][currentQuestionIndex];
+  document.getElementById('questionText').textContent=q.q;
+  const answersDiv=document.getElementById('answers'); answersDiv.innerHTML='';
+  q.options.forEach(opt=>{ let btn=document.createElement('button'); btn.textContent=opt; btn.classList.add('opt'); btn.onclick=()=>handleAnswer(opt,q.answer); answersDiv.appendChild(btn); });
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('jokerBtn').disabled=jokerUsed;
+  document.getElementById('jokerBtn').classList.toggle('used', jokerUsed);
+  document.getElementById('feedback').textContent='';
+  startTimer();
 }
 
-function loadQuestion() {
-  if (!teamInfo.questions[step]) return;
-  const q = teamInfo.questions[step];
-  document.getElementById("questionText").textContent = q.q;
-  const optionsDiv = document.getElementById("options");
-  optionsDiv.innerHTML = "";
-  const feedbackEl = document.getElementById("feedback");
-  feedbackEl.textContent = "";
-  document.getElementById("nextBtn").classList.add("hidden");
-  q.options.forEach(opt => {
-    const btn = document.createElement("button");
-    btn.textContent = opt;
-    btn.onclick = () => handleAnswer(opt);
-    optionsDiv.appendChild(btn);
-  });
+function handleAnswer(selected, correct){
+  clearInterval(timerInterval);
+  Array.from(document.querySelectorAll('.opt')).forEach(b=>b.disabled=true);
+  let points = selected===correct ? (jokerUsed ? 20 :10) :0;
+  score += points;
+  document.getElementById('scoreValue').textContent=score;
+  document.getElementById('questionResultText').textContent = selected===correct ? 'إجابة صحيحة!':'إجابة خاطئة!';
+  document.getElementById('quizArea').classList.add('hidden');
+  document.getElementById('questionResult').classList.remove('hidden');
+  if(jokerUsed){ document.getElementById('jokerBtn').classList.add('hidden'); }
+  jokerUsed=false;
 }
 
-function handleAnswer(opt) {
-  const isCorrect = opt === teamInfo.questions[step].answer;
-  if (isCorrect) score++;
-  const feedbackEl = document.getElementById("feedback");
-  feedbackEl.textContent = isCorrect ? '✔ إجابة صحيحة' : '✖ إجابة خاطئة';
-  feedbackEl.style.color = isCorrect ? '#4ade80' : '#f87171';
-  document.getElementById("nextBtn").classList.remove("hidden");
-  document.querySelectorAll('#options button').forEach(b => b.disabled = true);
-}
-
-function nextQuestion() {
-  step++;
-  if (step < teamInfo.questions.length) loadQuestion();
-  else finishQuiz();
-}
-
-function finishQuiz() {
-  const percent = Math.round((score / teamInfo.questions.length) * 100);
-  document.getElementById("quizBox").classList.add("hidden");
-  document.getElementById("resultBox").classList.remove("hidden");
-  document.getElementById("scorePercent").textContent = percent;
-  const img = document.getElementById("resultImage");
-  img.src = teamInfo.image;
-  img.style.display = "block";
-  const blurAmount = Math.max(0, 40 - percent / 2); // أخف بلور للنتيجة
-  img.style.filter = `blur(${blurAmount}px)`;
-}
-
-function checkName() {
-  const userGuess = document.getElementById("guessName").value.trim();
-  const result = document.getElementById("nameResult");
-  if (userGuess === teamInfo.realName) {
-    result.textContent = "إجابة صحيحة!";
-    result.style.color = "#4ade80";
-  } else {
-    result.textContent = "إجابة خاطئة";
-    result.style.color = "#f87171";
-  }
-}
-
-function restart() {
-  document.getElementById("resultBox").classList.add("hidden");
-  document.getElementById("quizBox").classList.add("hidden");
-  document.getElementById("teamSelect").classList.remove("hidden");
-}
+function continueQuiz(){ document.getElementById('questionResult').classList.add('hidden'); currentQuestionIndex++; if(currentQuestionIndex>=questionsData[currentTeam].length){ showResult(); }else{ document.getElementById('quizArea').classList.remove('hidden'); showQuestion(); } }
+function useJoker(){ jokerUsed=true; const btn=document.getElementById('jokerBtn'); btn.disabled=true; btn.classList.add('used'); btn.style.transform='scale(0.9)'; setTimeout(()=>{btn.style.transform='scale(1)';},200); }
+function showResult(){ document.getElementById('quizArea').classList.add('hidden'); document.getElementById('questionResult').classList.add('hidden'); const img=document.getElementById('finalImg'); img.src=finalImages[currentTeam]; let blurPercent = ((100 - score)/100)*20; img.style.filter = `blur(${blurPercent}px)`; img.classList.add('show'); document.getElementById('resultArea').classList.remove('hidden'); document.getElementById('finalScore').textContent=score; }
+function checkName(){ const input=document.getElementById('guessInput').value.trim(); const correctNames={team1:'نوح',team2:'يوحنا المعمدان',team3:'إبراهيم'}; document.getElementById('guessResult').textContent = input===correctNames[currentTeam] ? 'صحيح! عرفت الشخصية.' : 'خطأ، حاول مرة أخرى.'; }
+function restart(){ document.getElementById('resultArea').classList.add('hidden'); document.getElementById('teamSelect').classList.remove('hidden'); currentQuestionIndex=0; score=0; jokerUsed=false; document.getElementById('jokerBtn').classList.remove('hidden'); document.getElementById('jokerBtn').classList.remove('used'); }
+function startTimer(){ let time=60; document.getElementById('timer').textContent='الوقت: '+time+'s'; timerInterval=setInterval(()=>{ time--; document.getElementById('timer').textContent='الوقت: '+time+'s'; if(time<=0){ clearInterval(timerInterval); handleAnswer('',''); } },1000); }
 </script>
-
 </body>
 </html>
