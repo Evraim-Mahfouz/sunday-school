@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz شخصيات مسيحية أرثوذكسية</title>
+<style>
+body { background: #071024; color: white; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+.card { background: rgba(255,255,255,0.07); padding: 20px; border-radius: 15px; max-width: 500px; width: 100%; text-align: center; }
+button { padding: 12px; margin-top: 8px; width: 100%; border: none; border-radius: 10px; background: #3b82f6; color: white; cursor: pointer; }
+#options button { background: rgba(255,255,255,0.15); margin-bottom: 8px; }
+#feedback { margin-top: 12px; min-height: 24px; font-weight: bold; }
+#nextBtn { margin-top: 12px; background: #6b7280; }
+img { max-width: 100%; border-radius: 12px; margin-top: 12px; filter: blur(0px); transition: filter 0.5s; display: none; }
+input { width: 100%; padding: 10px; border-radius: 10px; border: none; margin-top: 12px; }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="card" id="teamSelect">
+<h2>اختر الشخصية</h2>
+<button onclick="selectTeam(1)">الشخصية 1</button>
+<button onclick="selectTeam(2)">الشخصية 2</button>
+<button onclick="selectTeam(3)">الشخصية 3</button>
+</div>
+
+<div class="card hidden" id="quizBox">
+<h2 id="questionText"></h2>
+<div id="options"></div>
+<div id="feedback"></div>
+<button id="nextBtn" class="hidden" onclick="nextQuestion()">التالي</button>
+</div>
+
+<div class="card hidden" id="resultBox">
+<h2>نتيجتك: <span id="scorePercent"></span>%</h2>
+<img id="resultImage" src="" alt="صورة الشخصية" />
+<input id="guessName" placeholder="مين الشخصية دي؟" type="text" />
+<button onclick="checkName()">تأكيد</button>
+<p id="nameResult"></p>
+<button onclick="restart()">إعادة من البداية</button>
+</div>
+
+<script>
+const data = {
+1: { questions: [
+{ q: "أمره الله ببناء شيء كبير لحماية الكائنات الحية، ما هو؟", options: ["سفينة", "جسر", "قلعة"], answer: "سفينة" },
+{ q: "حدث كبير غطى الأرض بالكامل لفترة طويلة، ما هو؟", options: ["طوفان", "زلزال", "حريق"], answer: "طوفان" },
+{ q: "كان يأخذ من كل نوع كائن حي زوجًا ليبقى على قيد الحياة، من هو؟", options: ["الشخصية", "ملك", "نبي"], answer: "الشخصية" },
+{ q: "أعطاه الله علامة على وعد بعد الحدث الكبير، ما هي؟", options: ["قوس قزح", "شجرة", "نجم"], answer: "قوس قزح" },
+{ q: "له ثلاثة أولاد مهمين في الرواية، من هم؟", options: ["سيم، حام، يافث", "موسى، هارون، يوسف", "داود، سليمان، صموئيل"], answer: "سيم، حام، يافث" },
+{ q: "اعتبره الأرثوذكس مثالًا للإيمان والثقة بالله، لماذا؟", options: ["الإيمان", "القوة", "الحرب"], answer: "الإيمان" },
+{ q: "بقيت المياه مرتفعة لفترة محددة، كم؟", options: ["40 يومًا", "7 أيام", "100 يوم"], answer: "40 يومًا" },
+{ q: "استمر في عمله بإيمان رغم الظروف الصعبة، ما الدرس هنا؟", options: ["الثقة بالله", "القوة", "الحرب"], answer: "الثقة بالله" },
+{ q: "رأى الأرثوذكس أن هذا الحدث يوضح عقاب الله للشر، ما الحدث؟", options: ["الطوفان", "الحرب", "الزلزال"], answer: "الطوفان" },
+{ q: "كان شخصية رئيسية في حفظ البشرية بعد الكارثة، من يكون؟", options: ["الشخصية", "ملك", "نبي"], answer: "الشخصية" }
+], image: "نوح.gif", realName: "نوح" },
+2: { questions: [
+{ q: "كان ينادي الناس بالتوبة والغفران، من هو؟", options: ["الشخصية", "ملك", "نبي"], answer: "الشخصية" },
+{ q: "عمد شخصية مهمة في نهر مشهور، ما هو النهر؟", options: ["نهر الأردن", "نهر النيل", "بحر الجليل"], answer: "نهر الأردن" },
+{ q: "كان يرتدي ثيابًا غير عادية مصنوعة من مادة معينة، ما هي؟", options: ["جلد الإبل", "حرير", "صوف"], answer: "جلد الإبل" },
+{ q: "السبب الرئيسي لندائه كان تحضير الناس لحدث كبير، ما الحدث؟", options: ["مجيء المسيح", "حرب", "ميلاد الملك"], answer: "مجيء المسيح" },
+{ q: "له أب مشهور في الإنجيل، من هو؟", options: ["زكريا", "يوسف", "يعقوب"], answer: "زكريا" },
+{ q: "دوره الأساسي كان إعلان مجيء شخص مهم، من هو؟", options: ["الشخصية", "ملك", "نبي"], answer: "الشخصية" },
+{ q: "انتهت حياته بأمر من شخص حكومي، من هو؟", options: ["هيرودس", "قيصر", "نيرون"], answer: "هيرودس" },
+{ q: "يمثل في الأرثوذكسية الصوت الذي يعلن عن المخلص، كيف يصفونه؟", options: ["الصوت في البرية", "الملك", "المعلم"], answer: "الصوت في البرية" },
+{ q: "كان رمزًا للتوبة في حياته، ما الدرس الروحي؟", options: ["التوبة", "الحرب", "الإيمان"], answer: "التوبة" },
+{ q: "استُخدمت حياته كمثال على التضحية والإخلاص، لماذا؟", options: ["الإخلاص", "الثروة", "الحكم"], answer: "الإخلاص" }
+], image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/John_the_Baptist_Icon.jpg/480px-John_the_Baptist_Icon.jpg", realName: "يوحنا المعمدان" },
+3: { questions: [
+{ q: "كان معروفًا بإيمانه العميق بالله، من هو؟", options: ["الشخصية", "ملك", "نبي"], answer: "الشخصية" },
+{ q: "اختُبر بأمر صعب يتعلق بابنه، ما هو الاختبار؟", options: ["التضحية", "الحرب", "رحلة"], answer: "التضحية" },
+{ q: "رزقه الله بولد واحد من زوجته سارة، كم عدد الأبناء؟", options: ["1", "2", "3"], answer: "1" },
+{ q: "استضاف ضيوفًا غير متوقعين من السماء، ما هو الحدث؟", options: ["لقاء الملائكة", "حرب", "سفر"], answer: "لقاء الملائكة" },
+{ q: "يعقد الأرثوذكس العهد من خلاله، ما معنى هذا العهد؟", options: ["مباركة أبدية", "سلطة ملكية", "معجزة"], answer: "مباركة أبدية" },
+{ q: "لقب بـ“أب الإيمان”، لماذا؟", options: ["لإيمانه الكبير", "لقوته", "لثروته"], answer: "لإيمانه الكبير" },
+{ q: "فرح عندما بشره الله بالذرية، ما الدرس؟", options: ["الإيمان والطاعة", "الحرب", "الثروة"], answer: "الإيمان والطاعة" },
+{ q: "يظهر في الأيقونات وهو يرحب بالملائكة، ما هو المشهد؟", options: ["مائدة مع الملائكة", "سيف", "هيكل"], answer: "مائدة مع الملائكة" },
+{ q: "علمنا الأرثوذكسية الإيمان والطاعة من حياته، كيف؟", options: ["الصلاة والثقة", "القوة", "السيطرة"], answer: "الصلاة والثقة" },
+{ q: "ضيافته كانت علامة على لقاء الملائكة، ما أهمية هذا؟", options: ["الملائكة", "الحرب", "الثراء"], answer: "الملائكة" }
+], image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Trinity_icon_by_Andrei_Rublev.jpg/480px-Trinity_icon_by_Andrei_Rublev.jpg", realName: "إبراهيم" }
+};
+
+let currentTeam = null;
+let step = 0;
+let score = 0;
+let teamInfo = null;
+
+function selectTeam(team) {
+  currentTeam = team;
+  teamInfo = data[team];
+  step = 0;
+  score = 0;
+  document.getElementById("teamSelect").classList.add("hidden");
+  document.getElementById("resultBox").classList.add("hidden");
+  document.getElementById("quizBox").classList.remove("hidden");
+  loadQuestion();
+}
+
+function loadQuestion() {
+  if (!teamInfo.questions[step]) return;
+  const q = teamInfo.questions[step];
+  document.getElementById("questionText").textContent = q.q;
+  const optionsDiv = document.getElementById("options");
+  optionsDiv.innerHTML = "";
+  const feedbackEl = document.getElementById("feedback");
+  feedbackEl.textContent = "";
+  document.getElementById("nextBtn").classList.add("hidden");
+  q.options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.textContent = opt;
+    btn.onclick = () => handleAnswer(opt);
+    optionsDiv.appendChild(btn);
+  });
+}
+
+function handleAnswer(opt) {
+  const isCorrect = opt === teamInfo.questions[step].answer;
+  if (isCorrect) score++;
+  const feedbackEl = document.getElementById("feedback");
+  feedbackEl.textContent = isCorrect ? '✔ إجابة صحيحة' : '✖ إجابة خاطئة';
+  feedbackEl.style.color = isCorrect ? '#4ade80' : '#f87171';
+  document.getElementById("nextBtn").classList.remove("hidden");
+  document.querySelectorAll('#options button').forEach(b => b.disabled = true);
+}
+
+function nextQuestion() {
+  step++;
+  if (step < teamInfo.questions.length) loadQuestion();
+  else finishQuiz();
+}
+
+function finishQuiz() {
+  const percent = Math.round((score / teamInfo.questions.length) * 100);
+  document.getElementById("quizBox").classList.add("hidden");
+  document.getElementById("resultBox").classList.remove("hidden");
+  document.getElementById("scorePercent").textContent = percent;
+  const img = document.getElementById("resultImage");
+  img.src = teamInfo.image;
+  img.style.display = "block";
+  const blurAmount = Math.max(0, 40 - percent / 2); // أخف بلور للنتيجة
+  img.style.filter = `blur(${blurAmount}px)`;
+}
+
+function checkName() {
+  const userGuess = document.getElementById("guessName").value.trim();
+  const result = document.getElementById("nameResult");
+  if (userGuess === teamInfo.realName) {
+    result.textContent = "إجابة صحيحة!";
+    result.style.color = "#4ade80";
+  } else {
+    result.textContent = "إجابة خاطئة";
+    result.style.color = "#f87171";
+  }
+}
+
+function restart() {
+  document.getElementById("resultBox").classList.add("hidden");
+  document.getElementById("quizBox").classList.add("hidden");
+  document.getElementById("teamSelect").classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
