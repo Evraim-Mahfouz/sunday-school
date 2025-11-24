@@ -118,7 +118,7 @@ const questionsData = {
     {q:'من هو إبراهيم؟', options:['نبي','ملك','ملك حرب','فيلسوف'], answer:'نبي'},
     {q:'أين ولد إبراهيم؟', options:['أور الكلدانيين','مكة','القدس','بابل'], answer:'أور الكلدانيين'},
     {q:'من زوجته؟', options:['سارة','مريم','هاجر','رفقة'], answer:'سارة'},
-    {q:'كم كان عمره عند الولادة إسحاق؟', options:['100','80','120','60'], answer:'100'},
+    {q:'كم كان عمره عند ولادة إسحاق؟', options:['100','80','120','60'], answer:'100'},
     {q:'ما اختبار الله لإبراهيم؟', options:['ذبح إسحاق','بناء الكعبة','الصوم','الهجرة'], answer:'ذبح إسحاق'},
     {q:'ما وعد الله لإبراهيم؟', options:['أمة كبيرة','ملك','مدينة','سفينة'], answer:'أمة كبيرة'},
     {q:'من كان أعظم أصدقائه؟', options:['ملائكة','نوح','موسى','داود'], answer:'ملائكة'},
@@ -130,18 +130,36 @@ const questionsData = {
 
 const finalImages={
   team1:'نوح.gif',
-  team2:'يوحنا.jpg',
-  team3:'ابراهيم.jpg'
+  team2:'https://upload.wikimedia.org/wikipedia/commons/d/d3/John_the_Baptist_by_Leonardo_da_Vinci.jpg',
+  team3:'https://upload.wikimedia.org/wikipedia/commons/9/97/Abraham_by_Carl_Bloch.jpg'
 };
 
-function startTeam(team){ currentTeam=team; currentQuestionIndex=0; score=0; jokerUsed=false; document.getElementById('teamSelect').classList.add('hidden'); document.getElementById('quizArea').classList.remove('hidden'); document.getElementById('jokerBtn').disabled=false; document.getElementById('jokerBtn').classList.remove('hidden'); document.getElementById('jokerBtn').classList.remove('used'); showQuestion(); }
+function startTeam(team){
+  currentTeam=team;
+  currentQuestionIndex=0;
+  score=0;
+  jokerUsed=false;
+  document.getElementById('teamSelect').classList.add('hidden');
+  document.getElementById('quizArea').classList.remove('hidden');
+  document.getElementById('jokerBtn').disabled=false;
+  document.getElementById('jokerBtn').classList.remove('hidden');
+  document.getElementById('jokerBtn').classList.remove('used');
+  showQuestion();
+}
 
 function showQuestion(){
   if(!questionsData[currentTeam] || questionsData[currentTeam].length===0){ alert('لا توجد أسئلة لهذا الفريق'); return; }
   const q=questionsData[currentTeam][currentQuestionIndex];
   document.getElementById('questionText').textContent=q.q;
-  const answersDiv=document.getElementById('answers'); answersDiv.innerHTML='';
-  q.options.forEach(opt=>{ let btn=document.createElement('button'); btn.textContent=opt; btn.classList.add('opt'); btn.onclick=()=>handleAnswer(opt,q.answer); answersDiv.appendChild(btn); });
+  const answersDiv=document.getElementById('answers');
+  answersDiv.innerHTML='';
+  q.options.forEach(opt=>{
+    let btn=document.createElement('button'); 
+    btn.textContent=opt; 
+    btn.classList.add('opt'); 
+    btn.onclick=()=>handleAnswer(opt,q.answer); 
+    answersDiv.appendChild(btn); 
+  });
   document.getElementById('nextBtn').classList.add('hidden');
   document.getElementById('jokerBtn').disabled=jokerUsed;
   document.getElementById('jokerBtn').classList.toggle('used', jokerUsed);
@@ -149,26 +167,82 @@ function showQuestion(){
   startTimer();
 }
 
-function handleAnswer(selected, correct){
+function handleAnswer(selected, correct, timeout=false){
   clearInterval(timerInterval);
   Array.from(document.querySelectorAll('.opt')).forEach(b=>b.disabled=true);
-  let points = selected===correct ? (jokerUsed ? 20 :10) :0;
+  let points = 0;
+  if(!timeout && selected===correct){
+    points = jokerUsed ? 20 : 10;
+  }
   score += points;
   document.getElementById('scoreValue').textContent=score;
-  document.getElementById('questionResultText').textContent = selected===correct ? 'إجابة صحيحة!':'إجابة خاطئة!';
+  document.getElementById('questionResultText').textContent = timeout ? 'انتهى الوقت! إجابة خاطئة!' : (selected===correct ? 'إجابة صحيحة!' : 'إجابة خاطئة!');
   document.getElementById('quizArea').classList.add('hidden');
   document.getElementById('questionResult').classList.remove('hidden');
-  if(jokerUsed){ document.getElementById('jokerBtn').classList.add('hidden'); }
+  if(jokerUsed){ 
+    document.getElementById('jokerBtn').classList.add('hidden'); 
+  }
   jokerUsed=false;
 }
 
-function continueQuiz(){ document.getElementById('questionResult').classList.add('hidden'); currentQuestionIndex++; if(currentQuestionIndex>=questionsData[currentTeam].length){ showResult(); }else{ document.getElementById('quizArea').classList.remove('hidden'); showQuestion(); } }
-function useJoker(){ jokerUsed=true; const btn=document.getElementById('jokerBtn'); btn.disabled=true; btn.classList.add('used'); btn.style.transform='scale(0.9)'; setTimeout(()=>{btn.style.transform='scale(1)';},200); }
-function showResult(){ document.getElementById('quizArea').classList.add('hidden'); document.getElementById('questionResult').classList.add('hidden'); const img=document.getElementById('finalImg'); img.src=finalImages[currentTeam]; let blurPercent = ((100 - score)/100)*20; img.style.filter = `blur(${blurPercent}px)`; img.classList.add('show'); document.getElementById('resultArea').classList.remove('hidden'); document.getElementById('finalScore').textContent=score; }
-function checkName(){ const input=document.getElementById('guessInput').value.trim(); const correctNames={team1:'نوح',team2:'يوحنا المعمدان',team3:'إبراهيم'}; document.getElementById('guessResult').textContent = input===correctNames[currentTeam] ? 'صحيح! عرفت الشخصية.' : 'خطأ، حاول مرة أخرى.'; }
-function restart(){ document.getElementById('resultArea').classList.add('hidden'); document.getElementById('teamSelect').classList.remove('hidden'); currentQuestionIndex=0; score=0; jokerUsed=false; document.getElementById('jokerBtn').classList.remove('hidden'); document.getElementById('jokerBtn').classList.remove('used'); }
-function startTimer(){ let time=60; document.getElementById('timer').textContent='الوقت: '+time+'s'; timerInterval=setInterval(()=>{ time--; document.getElementById('timer').textContent='الوقت: '+time+'s'; if(time<=0){ clearInterval(timerInterval); handleAnswer('',''); } },1000); }
+function continueQuiz(){
+  document.getElementById('questionResult').classList.add('hidden');
+  currentQuestionIndex++;
+  if(currentQuestionIndex>=questionsData[currentTeam].length){ 
+    showResult(); 
+  }else{ 
+    document.getElementById('quizArea').classList.remove('hidden'); 
+    showQuestion(); 
+  }
+}
+
+function useJoker(){ 
+  jokerUsed=true; 
+  const btn=document.getElementById('jokerBtn'); 
+  btn.disabled=true; 
+  btn.classList.add('used'); 
+  btn.style.transform='scale(0.9)'; 
+  setTimeout(()=>{btn.style.transform='scale(1)';},200); 
+}
+
+function showResult(){
+  document.getElementById('quizArea').classList.add('hidden');
+  document.getElementById('questionResult').classList.add('hidden');
+  const img=document.getElementById('finalImg');
+  img.src=finalImages[currentTeam];
+  let blurPercent = ((100 - score)/100)*20; // نسبة البلور
+  img.style.filter = `blur(${blurPercent}px)`;
+  img.classList.add('show');
+  document.getElementById('resultArea').classList.remove('hidden');
+  document.getElementById('finalScore').textContent=score;
+}
+
+function checkName(){
+  const input=document.getElementById('guessInput').value.trim();
+  const correctNames={team1:'نوح',team2:'يوحنا المعمدان',team3:'إبراهيم'};
+  document.getElementById('guessResult').textContent = input===correctNames[currentTeam] ? 'صحيح! عرفت الشخصية.' : 'خطأ، حاول مرة أخرى.';
+}
+
+function restart(){
+  document.getElementById('resultArea').classList.add('hidden');
+  document.getElementById('teamSelect').classList.remove('hidden');
+  currentQuestionIndex=0; score=0; jokerUsed=false;
+  document.getElementById('jokerBtn').classList.remove('hidden');
+  document.getElementById('jokerBtn').classList.remove('used');
+}
+
+function startTimer(){
+  let time=60;
+  document.getElementById('timer').textContent='الوقت: '+time+'s';
+  timerInterval=setInterval(()=>{
+    time--; 
+    document.getElementById('timer').textContent='الوقت: '+time+'s'; 
+    if(time<=0){ 
+      clearInterval(timerInterval); 
+      handleAnswer('', '', true); 
+    } 
+  },1000);
+}
 </script>
 </body>
 </html>
-
