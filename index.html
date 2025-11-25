@@ -210,7 +210,7 @@ function showResult(){
   document.getElementById('questionResult').classList.add('hidden');
   const img=document.getElementById('finalImg');
   img.src=finalImages[currentTeam];
-  let blurPercent = ((100 - score)/100)*20; // نسبة البلور
+  let blurPercent = Math.max(0, ((100 - Math.min(score, 100)) / 100) * 20);
   img.style.filter = `blur(${blurPercent}px)`;
   img.classList.add('show');
   document.getElementById('resultArea').classList.remove('hidden');
@@ -246,4 +246,5 @@ function startTimer(){
 </script>
 </body>
 </html>
+
 
